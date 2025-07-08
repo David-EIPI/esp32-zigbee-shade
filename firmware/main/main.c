@@ -109,6 +109,9 @@ static int32_t lowerLiftLimit = ENCODER_MIN_LIMIT;
 static int32_t zb_UpperLiftLimit = 180;
 static int32_t zb_LowerLiftLimit = 0;
 
+/* User configured coverage limit, % */
+static int32_t zb_userPercentageLimit = 100;
+
 /* Inversion flag. Changes percentage assigment and up/down buttons' directions. */
 static int zb_Inversion = 0;
 
@@ -400,6 +403,70 @@ static esp_zb_attribute_list_t * create_temperature_cluster(void)
     esp_zb_attribute_list_t * temperature_measurement_cluster = esp_zb_temperature_meas_cluster_create(&cfg);
 
     return temperature_measurement_cluster;
+}
+
+/* Analog output clusters - to support user settings */
+
+static struct {
+    char     description[16];
+    float    min_present;
+    float    max_present;
+    float    present_value;
+    float    resolution;
+    uint16_t status_flags;
+    uint16_t units;
+    uint32_t app_type;
+    volatile int32_t *value_ptr;
+} analog_output_attr_values[] = {
+    {
+    .description = "\x0e" "Coverage limit",
+    .min_present = 0,
+    .max_present = 100,
+    .present_value = 100,
+    .resolution = 1,
+    .status_flags = 0,
+    .units = 98, /* 98 = % */
+    .app_type = 16 << 16, /* 16 = brightness-percent */
+    .value_ptr = &zb_userPercentageLimit,
+    },
+};
+
+#define ANALOG_ATTR_FIELD_OFFSET(field) (offsetof(typeof(analog_output_attr_values[0]), field))
+
+static struct {
+    int id;
+    int offs;
+    int access;
+} analog_attr_offset[] = {
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_DESCRIPTION_ID      , ANALOG_ATTR_FIELD_OFFSET(description),   .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_ONLY },
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_MAX_PRESENT_VALUE_ID, ANALOG_ATTR_FIELD_OFFSET(max_present),   .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_ONLY },
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_MIN_PRESENT_VALUE_ID, ANALOG_ATTR_FIELD_OFFSET(min_present),   .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_ONLY },
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_PRESENT_VALUE_ID    , ANALOG_ATTR_FIELD_OFFSET(present_value), .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE | ESP_ZB_ZCL_ATTR_ACCESS_REPORTING },
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_RESOLUTION_ID       , ANALOG_ATTR_FIELD_OFFSET(resolution),    .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_ONLY },
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_STATUS_FLAGS_ID     , ANALOG_ATTR_FIELD_OFFSET(status_flags),  .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_WRITE },
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_ENGINEERING_UNITS_ID, ANALOG_ATTR_FIELD_OFFSET(units),         .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_ONLY },
+    { ESP_ZB_ZCL_ATTR_ANALOG_OUTPUT_APPLICATION_TYPE_ID , ANALOG_ATTR_FIELD_OFFSET(app_type),      .access = ESP_ZB_ZCL_ATTR_ACCESS_READ_ONLY }
+};
+
+static esp_zb_attribute_list_t * create_analog_cluster(unsigned cl_idx)
+{
+    esp_zb_attribute_list_t *esp_zb_analog_cluster = esp_zb_zcl_attr_list_create(ESP_ZB_ZCL_CLUSTER_ID_ANALOG_OUTPUT);
+    int nattrs = 0;
+    if (esp_zb_analog_cluster != NULL) {
+
+        analog_output_attr_values[cl_idx].present_value = *analog_output_attr_values[cl_idx].value_ptr;
+
+        int i;
+        for (i = 0; i < lengthof(analog_attr_offset); i++) {
+	    esp_err_t err = esp_zb_analog_output_cluster_add_attr(esp_zb_analog_cluster, analog_attr_offset[i].id,
+	        ((void*)&analog_output_attr_values[cl_idx]) + analog_attr_offset[i].offs );
+	    if (ESP_OK == err)
+	        nattrs += 1;
+        }
+    }
+
+    ESP_LOGI(TAG, "Analog output cluster %u created. Attrs: %d", cl_idx, nattrs);
+    return esp_zb_analog_cluster;
 }
 
 /* Setup Basic cluster */
