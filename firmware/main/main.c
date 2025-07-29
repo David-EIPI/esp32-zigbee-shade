@@ -465,7 +465,7 @@ static esp_zb_attribute_list_t * create_analog_cluster(unsigned cl_idx)
         }
     }
 
-    ESP_LOGI(TAG, "Analog output cluster %u created. Attrs: %d", cl_idx, nattrs);
+    ESP_LOGI(ZB_TAG, "Analog output cluster %u created. Attrs: %d", cl_idx, nattrs);
     return esp_zb_analog_cluster;
 }
 
