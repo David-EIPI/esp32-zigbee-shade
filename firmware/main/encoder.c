@@ -6,9 +6,9 @@
 #include "clock.h"
 #include "encoder.h"
 
-#define ENCODER_PIN_PWR 10
-#define ENCODER_PIN_A   12
-#define ENCODER_PIN_B   11
+#define ENCODER_PIN_PWR 12
+#define ENCODER_PIN_A   11
+#define ENCODER_PIN_B   10
 
 #define ENCODER_4COUNTS_PER_PULSE 0
 
