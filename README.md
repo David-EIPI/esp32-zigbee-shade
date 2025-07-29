@@ -15,6 +15,8 @@ It exposes 2 endpoints with 3 clusters:
 
 The temperature sensor reports via Zigbee to monitor the temperature inside the control box, as summer ambient temperatures often exceed 35°C, and the enclosure tightly houses both the ESP32 and the motor driver.
 
+See [here](https://github.com/David-EIPI/stm32-zigbee-light/blob/main/BUILD.md) instructions on building the firmware using `idf.py` on Linux.
+
 ## Hardware
 
 ### Mechanical
