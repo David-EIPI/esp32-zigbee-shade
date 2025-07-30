@@ -1,3 +1,13 @@
+/*
+ * Zigbee Roller Shade Example
+ *
+ * Unless required by applicable law or agreed to in writing, this
+ * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied.
+ * 2025/07
+ * License: BSD-2
+ */
+
 #include "driver/uart.h"
 #include "driver/gptimer.h"
 #include "driver/gpio.h"
@@ -6,9 +16,7 @@
 #include "esp_log.h"
 #include "esp_zigbee_core.h"
 #include "esp_system.h"
-//#include "clock.h"
 #include "motor.h"
-//#include <string.h>
 
 #define MOTOR_PIN_A 0
 #define MOTOR_PIN_B 1
@@ -64,11 +72,6 @@ esp_err_t pwm_motor_init(void)
     ESP_RETURN_ON_ERROR(gpio_set_level(MOTOR_PIN_A, PIN_IDLE_LEVEL), "pwm_motor", "GPIO set level failed");
     ESP_RETURN_ON_ERROR(gpio_set_direction(MOTOR_PIN_B, GPIO_MODE_OUTPUT), "pwm_motor", "GPIO direction failed");
     ESP_RETURN_ON_ERROR(gpio_set_level(MOTOR_PIN_B, PIN_IDLE_LEVEL), "pwm_motor", "GPIO set level failed");
-
-//    ledc_stop(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, PIN_IDLE_LEVEL);
-//    ESP_RETURN_ON_ERROR(gpio_set_direction(MOTOR_PIN_A, GPIO_MODE_OUTPUT), "pwm_motor", "GPIO direction failed");
-//    ESP_RETURN_ON_ERROR(gpio_set_level(MOTOR_PIN_A, PIN_IDLE_LEVEL), "pwm_motor", "GPIO set level failed");
-
     return ESP_OK;
 }
 
@@ -105,7 +108,6 @@ esp_err_t pwm_motor_stop(void)
 
 /* Delay to make sure the motor has stopped when this function returns */
     vTaskDelay((duty * 4 + 50) / portTICK_PERIOD_MS);
-//    vTaskDelay(500 / portTICK_PERIOD_MS);
 
     running = 0;
     return res;

@@ -1,15 +1,11 @@
 /*
- * SPDX-FileCopyrightText: 2021-2024 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: CC0-1.0
- *
- * Zigbee HA_on_off_light Example
- *
- * This example code is in the Public Domain (or CC0 licensed, at your option.)
+ * Zigbee Roller Shade Example
  *
  * Unless required by applicable law or agreed to in writing, this
  * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
  * CONDITIONS OF ANY KIND, either express or implied.
+ * 2025/07
+ * License: BSD-2
  */
 
 #include "esp_zigbee_core.h"
@@ -35,8 +31,6 @@
 /* Basic manufacturer information */
 #define MANUFACTURER_NAME "\x02" "DS"      /* Customized manufacturer name */
 #define MODEL_IDENTIFIER "\x06" "Shade1"  /* Customized model identifier */
-
-//#define CALIBRATION_DESC  "\x0b" "Calibration"
 
 #define ESP_ZB_ZED_CONFIG()                                         \
     {                                                               \

@@ -1,3 +1,14 @@
+/*
+ * Zigbee OTA upgrade support functions
+ *
+ * Unless required by applicable law or agreed to in writing, this
+ * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied.
+ * 2025/07
+ * License: BSD-2
+ */
+
+
 #include "ota.h"
 
 #include "esp_check.h"
@@ -5,7 +16,6 @@
 #include "esp_ota_ops.h"
 #include "esp_timer.h"
 #include "esp_zigbee_cluster.h"
-//#include "nvs_flash.h"
 
 
 static const char *TAG = "OTA_CLIENT";
@@ -174,7 +184,6 @@ esp_err_t zb_register_ota_upgrade_client_device(esp_zb_ep_list_t *ep_list, uint8
     uint16_t ota_upgrade_server_addr = 0xffff;
     uint8_t ota_upgrade_server_ep = 0xff;
     esp_zb_cluster_list_t *cluster_list = esp_zb_zcl_cluster_list_create();
-//    esp_zb_ep_list_t *ep_list = esp_zb_ep_list_create();
     esp_zb_endpoint_config_t endpoint_config = {
         .endpoint = endpoint_id,
         .app_profile_id = ESP_ZB_AF_HA_PROFILE_ID,

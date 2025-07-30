@@ -1,3 +1,13 @@
+/*
+ * Quad encoder support functions (via Pulse Counter module)
+ *
+ * Unless required by applicable law or agreed to in writing, this
+ * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+ * CONDITIONS OF ANY KIND, either express or implied.
+ * 2025/07
+ * License: BSD-2
+ */
+
 #include "driver/gpio.h"
 #include "esp_check.h"
 #include "esp_err.h"

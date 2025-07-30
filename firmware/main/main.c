@@ -1,15 +1,11 @@
 /*
- * SPDX-FileCopyrightText: 2021-2024 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: CC0-1.0
- *
- * Zigbee HA_on_off_light Example
- *
- * This example code is in the Public Domain (or CC0 licensed, at your option.)
+ * Zigbee Roller Shade Example
  *
  * Unless required by applicable law or agreed to in writing, this
  * software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
  * CONDITIONS OF ANY KIND, either express or implied.
+ * 2025/07
+ * License: BSD-2
  */
 
 #include <string.h>
@@ -228,15 +224,6 @@ static void init_gpio(void)
     gpio_set_level(indication_led_pin, 1);
 }
 
-/* Signal the dimmer task to disable its sync source and stop the timer
-    to avoid light flash when the source pin is disabled at restart. */
-static void stop_dimmer_and_restart(void)
-{
-//    stopDimmer = 1;
-    vTaskDelay(pdMS_TO_TICKS(200));
-    esp_restart();
-}
-
 
 void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
 {
@@ -273,7 +260,6 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
 
             if (ZB_INIT_FAIL_COUNT_TO_REBOOT <= zb_fail_count) {
                 ESP_LOGI(ZB_TAG, "ZB init has failed too many times. Restarting.");
-//                stop_dimmer_and_restart();
                 break;
             }
 
@@ -297,15 +283,13 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
         break;
     case ESP_ZB_ZDO_SIGNAL_LEAVE:
         ESP_LOGI(ZB_TAG, "Leave and network steering initiated.");
-//        esp_zb_zcl_reset_nvram_to_factory_default();
-//        esp_zb_bdb_reset_via_local_action();
         esp_zb_factory_reset();
         esp_zb_scheduler_alarm((esp_zb_callback_t)bdb_start_top_level_commissioning_cb, ESP_ZB_BDB_MODE_NETWORK_STEERING, 1000);
         break;
     case ESP_ZB_ZDO_DEVICE_UNAVAILABLE:
         if (ZB_ZDO_FAIL_COUNT_TO_REBOOT <= zb_fail_count) {
             ESP_LOGI(ZB_TAG, "ZDO device unavailable. Restarting.");
-            stop_dimmer_and_restart();
+            esp_restart();
             break;
         }
         zb_fail_count += 1;
@@ -321,21 +305,23 @@ void esp_zb_app_signal_handler(esp_zb_app_signal_t *signal_struct)
 /* Setup window covering cluster */
 static struct _zb_WindowCoveringAttrs {
     uint8_t windowCoveringType;
-//    uint16_t physicalClosedLimit;
     uint16_t currentPosition;
     uint8_t configStatus;
     uint8_t currentPercentage;
     int32_t mode;
 } zb_WindowCoveringAttrs = {
     .windowCoveringType = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_ROLLERSHADE_EXTERIOR,
-//    .physicalClosedLimit = 180, //cm
     .currentPosition = 0, //cm
     .configStatus = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_OPERATIONAL     |
         ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_ONLINE                      |
         ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_LIFT_CONTROL_IS_CLOSED_LOOP |
         ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_LIFT_ENCODER_CONTROLLED,
     .currentPercentage = 0,
-    .mode = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_LEDS_WILL_DISPLAY_FEEDBACK, //ESP_ZB_ZCL_WINDOW_COVERING_MODE_DEFAULT_VALUE,
+/*
+    ESP32 Zigbee SDK has a bug that considers mode=0 (no flags set) an invalid value.
+    Therefore, we assign an unused but harmless flag here to make SDK functions happy and accept this attribute.
+*/
+    .mode = ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_LEDS_WILL_DISPLAY_FEEDBACK,
 };
 
 static struct {
@@ -555,7 +541,6 @@ static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t 
             case ESP_ZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_OPEN_LIMIT_LIFT_ID:
                 if (message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
                     zb_UpperLiftLimit = *(uint16_t *)message->attribute.data.value;
-//                    nvs_open_save_int_attribute(ZB_STORAGE_NAMESPACE, nvs_zbUpperLimit, zb_UpperLiftLimit);
                     main_task_message = QM_ZIGBEE_SET_UPPER;
                 }
                 break;
@@ -563,7 +548,6 @@ static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t 
             case ESP_ZB_ZCL_ATTR_WINDOW_COVERING_INSTALLED_CLOSED_LIMIT_LIFT_ID:
                 if (message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
                     zb_LowerLiftLimit = *(uint16_t *)message->attribute.data.value;
-//                    nvs_open_save_int_attribute(ZB_STORAGE_NAMESPACE, nvs_zbLowerLimit, zb_LowerLiftLimit);
                     main_task_message = QM_ZIGBEE_SET_LOWER;
                 }
                 break;
@@ -571,14 +555,12 @@ static esp_err_t zb_attribute_handler(const esp_zb_zcl_set_attr_value_message_t 
             case ESP_ZB_ZCL_ATTR_WINDOW_COVERING_VELOCITY_ID:
                 if (message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_U16) {
                     zbLiftVelocity = *(uint16_t *)message->attribute.data.value;
-//                    nvs_open_save_int_attribute(ZB_STORAGE_NAMESPACE, nvs_zbLowerLimit, zb_LowerLiftLimit);
                     main_task_message = QM_ZIGBEE_SET_VELOCITY;
                 }
                 break;
             case ESP_ZB_ZCL_ATTR_WINDOW_COVERING_MODE_ID:
                 if (message->attribute.data.type == ESP_ZB_ZCL_ATTR_TYPE_8BITMAP) {
                     main_task_message = QM_ZIGBEE_SET_MODE;
-//                    main_task_message_param = *(uint8_t *)message->attribute.data.value;
                     if (ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_REVERSED_MOTOR_DIRECTION & (*(uint8_t *)message->attribute.data.value)) {
                         zb_WindowCoveringAttrs.mode |= ESP_ZB_ZCL_ATTR_WINDOW_COVERING_TYPE_REVERSED_MOTOR_DIRECTION;
                         zb_WindowCoveringAttrs.configStatus |= ESP_ZB_ZCL_ATTR_WINDOW_COVERING_CONFIG_REVERSE_COMMANDS;
@@ -736,16 +718,6 @@ static esp_err_t zb_action_handler(esp_zb_core_action_callback_id_t callback_id,
 
 static void setup_endpoints(void)
 {
-#if 0
-    nvs_handle_t handle = 0;
-    esp_err_t err;
-
-    err = nvs_open(ZB_STORAGE_NAMESPACE, NVS_READONLY, &handle);
-    if (ESP_OK != err) {
-        ESP_LOGE(ZB_TAG, "%s: Error (%s) opening NVS handle!", ZB_STORAGE_NAMESPACE, esp_err_to_name(err));
-        handle = 0;
-    }
-#endif
     esp_zb_ep_list_t *endpoint_list = esp_zb_ep_list_create();
 
     int a_idx, ep_idx;
@@ -792,10 +764,6 @@ static void setup_endpoints(void)
 
     }
 
-#if 0
-    if (handle)
-        nvs_close(handle);
-#endif
 /* Register endpoints */
 
     ESP_ERROR_CHECK(zb_register_ota_upgrade_client_device(endpoint_list, HA_OTA_ENDPOINT));
@@ -825,13 +793,6 @@ static void esp_zb_task(void *pvParameters)
     esp_zb_set_primary_network_channel_set(ESP_ZB_PRIMARY_CHANNEL_MASK);
     ESP_ERROR_CHECK(esp_zb_start(false));
 
-//    update_window_covering_attributes(HA_CLOSURE_ENDPOINT);
-
-/* Trigger report */
-//    int value = 1;
-//    esp_zb_zcl_set_attribute_val(HA_FIRST_ENDPOINT+1, ESP_ZB_ZCL_CLUSTER_ID_MULTI_VALUE, ESP_ZB_ZCL_CLUSTER_SERVER_ROLE,
-//        ESP_ZB_ZCL_ATTR_MULTI_VALUE_PRESENT_VALUE_ID, &value, 0);
-
     esp_zb_stack_main_loop();
 }
 
@@ -860,33 +821,6 @@ static esp_err_t read_temperature_sensor(void)
 
 
 /********************* NVS functions **************************/
-
-#if 0
-static esp_err_t nvs_open_save_int_attribute(const char *storage, const char *key, int32_t value)
-{
-    nvs_handle_t handle = 0;
-    esp_err_t err = ESP_OK;
-
-    ESP_RETURN_ON_ERROR(nvs_open(storage, NVS_READWRITE, &handle), MAIN_TAG, "Error opening NVS handle!");
-
-    err = nvs_set_i32(handle, key, value);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(MAIN_TAG, "Failed to write to NVS (%s)!", esp_err_to_name(err));
-
-    } else {
-
-        err = nvs_commit(handle);
-        if (err != ESP_OK)
-        {
-            ESP_LOGE(MAIN_TAG, "Failed to commit to NVS (%s)!", esp_err_to_name(err));
-        }
-    }
-
-    nvs_close(handle);
-    return err;
-}
-#endif
 
 static esp_err_t nvs_read_int_attribute(nvs_handle_t handle, const char *key, int32_t *value)
 {
