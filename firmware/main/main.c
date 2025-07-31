@@ -992,10 +992,17 @@ static void motor_control_task(void *pvParameters)
                     }
                     break;
                 case QM_ZIGBEE_UP:
-                    move_covering_to(upperLiftLimit);
+                    if (currentPosition > upperLiftLimit) {
+                    /* This check is needed because previous positioning command could have resulted in a small overshoot.
+                     If so, the move towards the upperLiftLimit will happen in a wrong direction. */
+                        move_covering_to(upperLiftLimit);
+                    }
                     break;
                 case QM_ZIGBEE_DOWN:
-                    move_covering_to(lowerLiftLimit);
+                    if (currentPosition < lowerLiftLimit) {
+                    /* Same reason for this check as the above. */
+                        move_covering_to(lowerLiftLimit);
+                    }
                     break;
                 case QM_ZIGBEE_TO_VALUE:
                     position = zigbee_units_to_encoder(zb_value);
