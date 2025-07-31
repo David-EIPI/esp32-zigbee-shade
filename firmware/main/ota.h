@@ -16,8 +16,8 @@
 /* Zigbee configuration */
 #define OTA_UPGRADE_MANUFACTURER            0xD3B1                                  /* The attribute indicates the file version of the downloaded image on the device*/
 #define OTA_UPGRADE_IMAGE_TYPE              0x1011                                  /* The attribute indicates the value for the manufacturer of the device */
-#define OTA_UPGRADE_RUNNING_FILE_VERSION    263                                     /* The attribute indicates the file version of the running firmware image on the device */
-#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 263                                     /* The attribute indicates the file version of the downloaded firmware image on the device */
+#define OTA_UPGRADE_RUNNING_FILE_VERSION    264                                     /* The attribute indicates the file version of the running firmware image on the device */
+#define OTA_UPGRADE_DOWNLOADED_FILE_VERSION 264                                     /* The attribute indicates the file version of the downloaded firmware image on the device */
 #define OTA_UPGRADE_HW_VERSION              0x0102                                  /* The parameter indicates the version of hardware */
 #define OTA_UPGRADE_MAX_DATA_SIZE           223                                     /* The recommended OTA image block size */
 
